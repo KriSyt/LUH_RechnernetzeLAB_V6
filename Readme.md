@@ -6,11 +6,13 @@
 
 The switch is virtualized as a bridge interface on Router1 (switch_bridge)
 Bandwidth and delays are set between:
-* Sender1 - Router1 (100MBit/s)
-* Sender2 - Router1 (100MBit/s)
-* Router1 - Switch (50MBit/s)
+* Sender1 -> Router1 (100MBit/s)
+* Sender2 -> Router1 (100MBit/s)
+* Router1 -> Switch (50MBit/s)
+* Receiver1 -> Router1 (100MBit/s)
+* Receiver2 -> Router1 (100MBit/s)
 
-***Links to the Receivers have no limit, as I don't see any impact.***
+
 
 
 ### Network:

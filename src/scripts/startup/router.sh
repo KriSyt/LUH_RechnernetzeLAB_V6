@@ -9,5 +9,5 @@ ip route del 10.3.0.0/16
 ip route del 10.4.0.0/16
 ip route add 10.3.0.0/16 dev switch_bridge
 ip route add 10.4.0.0/16 dev switch_bridge
-tc qdisc add dev switch_bridge root tbf rate 50mbit latency 1ms burst 1600
+tc qdisc add dev switch_bridge root handle 1: netem rate 50mbit
 /usr/sbin/sshd -D
