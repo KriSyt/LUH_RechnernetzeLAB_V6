@@ -1,0 +1,104 @@
+version: "3.7"
+
+services:
+  sender1:
+    build:
+      context: .
+    cap_add:
+      - NET_ADMIN
+    networks:
+      network_s1_R:
+        ipv4_address: 10.1.0.2
+    extra_hosts:
+      - "receiver1:10.3.0.2"
+      - "receiver2:10.4.0.2"
+    command: >-
+      sh -c "ip route add 10.3.0.0/16 via 10.1.0.11&& ip route add 10.4.0.0/16 via 10.1.0.11 && tc qdisc replace dev eth0 root tbf rate  100mbit latency 1ms burst 1600 && /usr/sbin/sshd -D"
+    expose:
+      - 22
+
+  sender2:
+    build:
+      context: .
+    cap_add:
+      - NET_ADMIN
+    networks:
+      network_s2_R:
+        ipv4_address: 10.2.0.2
+    extra_hosts:
+      - "receiver1:10.3.0.2"
+      - "receiver2:10.4.0.2"
+    command: >-
+      sh -c "ip route add 10.3.0.0/16 via 10.2.0.11&& ip route add 10.4.0.0/16 via 10.2.0.11&& tc qdisc replace dev eth0 root tbf rate  100mbit latency 1ms burst 1600 &&usr/sbin/sshd -D"
+    expose:
+      - 22
+
+  router:
+    build:
+      context: .
+    cap_add:
+      - NET_ADMIN
+    networks:
+      network_s1_R:
+        ipv4_address: 10.1.0.11
+      network_s2_R:
+        ipv4_address: 10.2.0.11
+      network_R_r1:
+        ipv4_address: 10.3.0.11
+      network_R_r2:
+        ipv4_address: 10.4.0.11
+    command: >-
+      sh -c "iptables -A FORWARD -i eth0 -j ACCEPT && iptables -A FORWARD -i eth1 -j ACCEPT && ip link add name switch_bridge type bridge&& ip link set dev switch_bridge up&& ip link set eth0 master switch_bridge&& ip link set eth1 master switch_bridge&& ip route del 10.3.0.0/16 && ip route del 10.4.0.0/16&& ip route add 10.3.0.0/16 dev switch_bridge&& ip route add 10.4.0.0/16 dev switch_bridge && tc qdisc add dev switch_bridge root tbf rate 50mbit latency 1ms burst 1600 && /usr/sbin/sshd -D"
+    expose:
+      - 22
+
+  receiver1:
+    build:
+      context: .
+    cap_add:
+      - NET_ADMIN
+    networks:
+      network_R_r1:
+        ipv4_address: 10.3.0.2
+    command: >-
+      sh -c "ip route add 10.1.0.0/16 via 10.3.0.11 && ip route add 10.2.0.0/16 via 10.3.0.11 && /usr/sbin/sshd -D"
+    expose:
+      - 22
+
+  receiver2:
+    build:
+      context: .
+    cap_add:
+      - NET_ADMIN
+    networks:
+      network_R_r2:
+        ipv4_address: 10.4.0.2
+    command: >-
+      sh -c "ip route add 10.1.0.0/16 via 10.4.0.11 && ip route add 10.2.0.0/16 via 10.4.0.11&& /usr/sbin/sshd -D"
+
+    expose:
+      - 22
+
+networks:
+  #sX->senderX rX->receiverX R->Router    
+  network_s1_R:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.1.0.0/16
+  network_s2_R:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.2.0.0/16
+
+  network_R_r1:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.3.0.0/16
+  network_R_r2:
+    driver: bridge
+    ipam:
+      config:
+        - subnet: 10.4.0.0/16
