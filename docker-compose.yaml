@@ -12,10 +12,11 @@ services:
     extra_hosts:
       - "receiver1:10.3.0.2"
       - "receiver2:10.4.0.2"
-    command: >-
-      sh -c "ip route add 10.3.0.0/16 via 10.1.0.11&& ip route add 10.4.0.0/16 via 10.1.0.11 && tc qdisc replace dev eth0 root tbf rate  100mbit latency 1ms burst 1600 && /usr/sbin/sshd -D"
+    entrypoint: /root/scripts/startup/sender1.sh
     expose:
       - 22
+    volumes:
+      - ./src/scripts:/root/scripts
 
   sender2:
     build:
@@ -28,10 +29,11 @@ services:
     extra_hosts:
       - "receiver1:10.3.0.2"
       - "receiver2:10.4.0.2"
-    command: >-
-      sh -c "ip route add 10.3.0.0/16 via 10.2.0.11&& ip route add 10.4.0.0/16 via 10.2.0.11&& tc qdisc replace dev eth0 root tbf rate  100mbit latency 1ms burst 1600 &&usr/sbin/sshd -D"
+    entrypoint: /root/scripts/startup/sender2.sh
     expose:
       - 22
+    volumes:
+      - ./src/scripts:/root/scripts
 
   router:
     build:
@@ -47,10 +49,11 @@ services:
         ipv4_address: 10.3.0.11
       network_R_r2:
         ipv4_address: 10.4.0.11
-    command: >-
-      sh -c "iptables -A FORWARD -i eth0 -j ACCEPT && iptables -A FORWARD -i eth1 -j ACCEPT && ip link add name switch_bridge type bridge&& ip link set dev switch_bridge up&& ip link set eth0 master switch_bridge&& ip link set eth1 master switch_bridge&& ip route del 10.3.0.0/16 && ip route del 10.4.0.0/16&& ip route add 10.3.0.0/16 dev switch_bridge&& ip route add 10.4.0.0/16 dev switch_bridge && tc qdisc add dev switch_bridge root tbf rate 50mbit latency 1ms burst 1600 && /usr/sbin/sshd -D"
+    entrypoint: /root/scripts/startup/router.sh
     expose:
       - 22
+    volumes:
+      - ./src/scripts:/root/scripts
 
   receiver1:
     build:
@@ -60,10 +63,11 @@ services:
     networks:
       network_R_r1:
         ipv4_address: 10.3.0.2
-    command: >-
-      sh -c "ip route add 10.1.0.0/16 via 10.3.0.11 && ip route add 10.2.0.0/16 via 10.3.0.11 && /usr/sbin/sshd -D"
+    entrypoint: /root/scripts/startup/receiver1.sh
     expose:
       - 22
+    volumes:
+      - ./src/scripts:/root/scripts
 
   receiver2:
     build:
@@ -73,11 +77,11 @@ services:
     networks:
       network_R_r2:
         ipv4_address: 10.4.0.2
-    command: >-
-      sh -c "ip route add 10.1.0.0/16 via 10.4.0.11 && ip route add 10.2.0.0/16 via 10.4.0.11&& /usr/sbin/sshd -D"
-
+    entrypoint: /root/scripts/startup/receiver2.sh
     expose:
       - 22
+    volumes:
+      - ./src/scripts:/root/scripts
 
 networks:
   #sX->senderX rX->receiverX R->Router    

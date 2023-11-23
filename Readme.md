@@ -39,7 +39,21 @@ Bandwidth and delays are set between:
 * [***DietTopp***](https://github.com/brentondwalker/DietTopp.git)
 * [***pathload***](https://github.com/brentondwalker/pathload.git)
 
-
 ***[pathchirp](https://github.com/brentondwalker/pathchirp.git) currently not supported, i cant compile this***
+
+### Commands
+
+launch fresh containers:
+```
+docker compose up --build -d
+```
+
+Stop Containers remove networks
+```
+docker compose down
+```
+
+
+
 
 
